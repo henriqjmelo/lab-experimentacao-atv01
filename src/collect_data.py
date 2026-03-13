@@ -28,7 +28,7 @@ def run_query(query, variables):
     else:
         raise Exception(f"Query failed to run by returning code of {request.status_code}. {query}")
 
-def get_repository_data(num_repos=100):
+def get_repository_data(num_repos=1000):
     """Coleta dados de repositórios do GitHub usando a API GraphQL."""
     # Ajuste do caminho para ler o arquivo query.graphql
     query_path = os.path.join(os.path.dirname(__file__), 'query.graphql')
@@ -44,7 +44,7 @@ def get_repository_data(num_repos=100):
     while len(all_repositories) < num_repos and has_next_page:
         variables = {
             "queryString": "stars:>1000 sort:stars-desc", # Critério de busca: repositórios com mais de 1000 estrelas, ordenados por estrelas (decrescente)
-            "first": min(num_repos - len(all_repositories), 10), # Busca no máximo 50 por vez (limite da API)
+            "first": min(10, num_repos - len(all_repositories)), # Busca no máximo por vez (limite da API)
             "after": end_cursor
         }
         
@@ -117,7 +117,7 @@ def save_to_csv(data, filename):
 if __name__ == '__main__':
     # Define o caminho do arquivo CSV de saída
     output_csv = os.path.join(os.path.dirname(__file__), '..', 'data', 'repositories.csv')
-    repositories = get_repository_data(num_repos=100)
+    repositories = get_repository_data(num_repos=1000)
     if repositories:
         save_to_csv(repositories, output_csv)
     else:
