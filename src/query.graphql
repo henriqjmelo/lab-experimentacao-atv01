@@ -1,38 +1,74 @@
-query ($queryString: String!, $first: Int!, $after: String) {
+query SearchRepositories($queryString: String!, $first: Int!, $after: String) {
   search(query: $queryString, type: REPOSITORY, first: $first, after: $after) {
     pageInfo {
-      endCursor
       hasNextPage
+      endCursor
     }
     nodes {
       ... on Repository {
+        # Identificação
         name
         owner {
           login
         }
+        
+        # Popularidade
         stargazerCount
         forkCount
+        
+        # Datas
         createdAt
         updatedAt
+        
+        # Linguagem
         primaryLanguage {
           name
         }
-        pullRequests(states: MERGED) {
+        
+        # Contribuições (RQ02)
+        pullRequests(first: 0) {
           totalCount
         }
-        releases {
+        
+        # Releases (RQ03)
+        releases(first: 0) {
           totalCount
         }
-        issues(states: CLOSED) {
+        
+        # Issues (RQ06)
+        issues(first: 0, states: CLOSED) {
           totalCount
         }
-        totalIssues: issues {
+        totalIssues: issues(first: 0) {
           totalCount
         }
+        
+        # Metadados
         diskUsage
+        defaultBranchRef {
+          name
+          target {
+            ... on Commit {
+              history(first: 0) {
+                totalCount
+              }
+            }
+          }
+        }
+        
+        # Licença
         licenseInfo {
           spdxId
           name
+        }
+        
+        # Tópicos
+        repositoryTopics(first: 10) {
+          nodes {
+            topic {
+              name
+            }
+          }
         }
       }
     }
