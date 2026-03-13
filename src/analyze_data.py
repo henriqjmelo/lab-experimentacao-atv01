@@ -17,12 +17,21 @@ class RepositoryAnalyzer:
         self.df['createdAt'] = pd.to_datetime(self.df['createdAt'])
         self.df['updatedAt'] = pd.to_datetime(self.df['updatedAt'])
         
+        # Remover timezone para comparação (usar UTC)
+        if self.df['createdAt'].dt.tz is not None:
+            self.df['createdAt'] = self.df['createdAt'].dt.tz_localize(None)
+        if self.df['updatedAt'].dt.tz is not None:
+            self.df['updatedAt'] = self.df['updatedAt'].dt.tz_localize(None)
+        
+        # Usar pd.Timestamp.now() sem timezone
+        now = pd.Timestamp.now()
+        
         # Calcular idade do repositório (em dias)
-        self.df['age_days'] = (datetime.now() - self.df['createdAt']).dt.days
+        self.df['age_days'] = (now - self.df['createdAt']).dt.days
         self.df['age_years'] = self.df['age_days'] / 365.25
         
         # Calcular dias desde última atualização
-        self.df['days_since_update'] = (datetime.now() - self.df['updatedAt']).dt.days
+        self.df['days_since_update'] = (now - self.df['updatedAt']).dt.days
         
         # Calcular razão de issues fechadas
         self.df['closed_issues_ratio'] = np.where(
@@ -38,58 +47,58 @@ class RepositoryAnalyzer:
     def rq01_repository_maturity(self):
         """RQ 01: Sistemas populares são maduros/antigos?"""
         stats = {
-            'median_age_years': self.df['age_years'].median(),
-            'mean_age_years': self.df['age_years'].mean(),
-            'min_age_years': self.df['age_years'].min(),
-            'max_age_years': self.df['age_years'].max(),
-            'std_age_years': self.df['age_years'].std(),
-            'q1_age_years': self.df['age_years'].quantile(0.25),
-            'q3_age_years': self.df['age_years'].quantile(0.75),
+            'median_age_years': float(self.df['age_years'].median()),
+            'mean_age_years': float(self.df['age_years'].mean()),
+            'min_age_years': float(self.df['age_years'].min()),
+            'max_age_years': float(self.df['age_years'].max()),
+            'std_age_years': float(self.df['age_years'].std()),
+            'q1_age_years': float(self.df['age_years'].quantile(0.25)),
+            'q3_age_years': float(self.df['age_years'].quantile(0.75)),
         }
         return stats
     
     def rq02_external_contributions(self):
         """RQ 02: Sistemas populares recebem muita contribuição externa?"""
         stats = {
-            'median_prs': self.df['pullRequests_totalCount'].median(),
-            'mean_prs': self.df['pullRequests_totalCount'].mean(),
-            'min_prs': self.df['pullRequests_totalCount'].min(),
-            'max_prs': self.df['pullRequests_totalCount'].max(),
-            'std_prs': self.df['pullRequests_totalCount'].std(),
-            'q1_prs': self.df['pullRequests_totalCount'].quantile(0.25),
-            'q3_prs': self.df['pullRequests_totalCount'].quantile(0.75),
-            'total_prs': self.df['pullRequests_totalCount'].sum(),
+            'median_prs': float(self.df['pullRequests_totalCount'].median()),
+            'mean_prs': float(self.df['pullRequests_totalCount'].mean()),
+            'min_prs': float(self.df['pullRequests_totalCount'].min()),
+            'max_prs': float(self.df['pullRequests_totalCount'].max()),
+            'std_prs': float(self.df['pullRequests_totalCount'].std()),
+            'q1_prs': float(self.df['pullRequests_totalCount'].quantile(0.25)),
+            'q3_prs': float(self.df['pullRequests_totalCount'].quantile(0.75)),
+            'total_prs': float(self.df['pullRequests_totalCount'].sum()),
         }
         return stats
     
     def rq03_release_frequency(self):
         """RQ 03: Sistemas populares lançam releases com frequência?"""
         stats = {
-            'median_releases': self.df['releases_totalCount'].median(),
-            'mean_releases': self.df['releases_totalCount'].mean(),
-            'min_releases': self.df['releases_totalCount'].min(),
-            'max_releases': self.df['releases_totalCount'].max(),
-            'std_releases': self.df['releases_totalCount'].std(),
-            'q1_releases': self.df['releases_totalCount'].quantile(0.25),
-            'q3_releases': self.df['releases_totalCount'].quantile(0.75),
-            'repos_with_releases': (self.df['releases_totalCount'] > 0).sum(),
-            'repos_without_releases': (self.df['releases_totalCount'] == 0).sum(),
+            'median_releases': float(self.df['releases_totalCount'].median()),
+            'mean_releases': float(self.df['releases_totalCount'].mean()),
+            'min_releases': float(self.df['releases_totalCount'].min()),
+            'max_releases': float(self.df['releases_totalCount'].max()),
+            'std_releases': float(self.df['releases_totalCount'].std()),
+            'q1_releases': float(self.df['releases_totalCount'].quantile(0.25)),
+            'q3_releases': float(self.df['releases_totalCount'].quantile(0.75)),
+            'repos_with_releases': int((self.df['releases_totalCount'] > 0).sum()),
+            'repos_without_releases': int((self.df['releases_totalCount'] == 0).sum()),
         }
         return stats
     
     def rq04_update_frequency(self):
         """RQ 04: Sistemas populares são atualizados com frequência?"""
         stats = {
-            'median_days_since_update': self.df['days_since_update'].median(),
-            'mean_days_since_update': self.df['days_since_update'].mean(),
-            'min_days_since_update': self.df['days_since_update'].min(),
-            'max_days_since_update': self.df['days_since_update'].max(),
-            'std_days_since_update': self.df['days_since_update'].std(),
-            'q1_days_since_update': self.df['days_since_update'].quantile(0.25),
-            'q3_days_since_update': self.df['days_since_update'].quantile(0.75),
-            'repos_updated_last_week': (self.df['days_since_update'] <= 7).sum(),
-            'repos_updated_last_month': (self.df['days_since_update'] <= 30).sum(),
-            'repos_updated_last_year': (self.df['days_since_update'] <= 365).sum(),
+            'median_days_since_update': float(self.df['days_since_update'].median()),
+            'mean_days_since_update': float(self.df['days_since_update'].mean()),
+            'min_days_since_update': float(self.df['days_since_update'].min()),
+            'max_days_since_update': float(self.df['days_since_update'].max()),
+            'std_days_since_update': float(self.df['days_since_update'].std()),
+            'q1_days_since_update': float(self.df['days_since_update'].quantile(0.25)),
+            'q3_days_since_update': float(self.df['days_since_update'].quantile(0.75)),
+            'repos_updated_last_week': int((self.df['days_since_update'] <= 7).sum()),
+            'repos_updated_last_month': int((self.df['days_since_update'] <= 30).sum()),
+            'repos_updated_last_year': int((self.df['days_since_update'] <= 365).sum()),
         }
         return stats
     
@@ -100,8 +109,8 @@ class RepositoryAnalyzer:
         language_counts = languages.value_counts()
         
         stats = {
-            'total_languages': len(language_counts),
-            'repos_without_language': self.df['primaryLanguage'].isna().sum(),
+            'total_languages': int(len(language_counts)),
+            'repos_without_language': int(self.df['primaryLanguage'].isna().sum()),
             'top_languages': language_counts.head(10).to_dict(),
             'language_distribution': language_counts.to_dict(),
         }
@@ -113,15 +122,15 @@ class RepositoryAnalyzer:
         repos_with_issues = self.df[self.df['issues_totalCount'] > 0]
         
         stats = {
-            'median_closed_ratio': repos_with_issues['closed_issues_ratio'].median(),
-            'mean_closed_ratio': repos_with_issues['closed_issues_ratio'].mean(),
-            'min_closed_ratio': repos_with_issues['closed_issues_ratio'].min(),
-            'max_closed_ratio': repos_with_issues['closed_issues_ratio'].max(),
-            'std_closed_ratio': repos_with_issues['closed_issues_ratio'].std(),
-            'q1_closed_ratio': repos_with_issues['closed_issues_ratio'].quantile(0.25),
-            'q3_closed_ratio': repos_with_issues['closed_issues_ratio'].quantile(0.75),
-            'repos_with_issues': len(repos_with_issues),
-            'repos_without_issues': (self.df['issues_totalCount'] == 0).sum(),
+            'median_closed_ratio': float(repos_with_issues['closed_issues_ratio'].median()),
+            'mean_closed_ratio': float(repos_with_issues['closed_issues_ratio'].mean()),
+            'min_closed_ratio': float(repos_with_issues['closed_issues_ratio'].min()),
+            'max_closed_ratio': float(repos_with_issues['closed_issues_ratio'].max()),
+            'std_closed_ratio': float(repos_with_issues['closed_issues_ratio'].std()),
+            'q1_closed_ratio': float(repos_with_issues['closed_issues_ratio'].quantile(0.25)),
+            'q3_closed_ratio': float(repos_with_issues['closed_issues_ratio'].quantile(0.75)),
+            'repos_with_issues': int(len(repos_with_issues)),
+            'repos_without_issues': int((self.df['issues_totalCount'] == 0).sum()),
         }
         return stats
     
@@ -136,15 +145,15 @@ class RepositoryAnalyzer:
             lang_data = df_with_lang[df_with_lang['primaryLanguage'] == lang]
             
             language_analysis[lang] = {
-                'count': len(lang_data),
-                'median_prs': lang_data['pullRequests_totalCount'].median(),
-                'mean_prs': lang_data['pullRequests_totalCount'].mean(),
-                'median_releases': lang_data['releases_totalCount'].median(),
-                'mean_releases': lang_data['releases_totalCount'].mean(),
-                'median_days_since_update': lang_data['days_since_update'].median(),
-                'mean_days_since_update': lang_data['days_since_update'].mean(),
-                'total_prs': lang_data['pullRequests_totalCount'].sum(),
-                'total_releases': lang_data['releases_totalCount'].sum(),
+                'count': int(len(lang_data)),
+                'median_prs': float(lang_data['pullRequests_totalCount'].median()),
+                'mean_prs': float(lang_data['pullRequests_totalCount'].mean()),
+                'median_releases': float(lang_data['releases_totalCount'].median()),
+                'mean_releases': float(lang_data['releases_totalCount'].mean()),
+                'median_days_since_update': float(lang_data['days_since_update'].median()),
+                'mean_days_since_update': float(lang_data['days_since_update'].mean()),
+                'total_prs': float(lang_data['pullRequests_totalCount'].sum()),
+                'total_releases': float(lang_data['releases_totalCount'].sum()),
             }
         
         # Ordenar por número de repositórios
@@ -173,24 +182,8 @@ class RepositoryAnalyzer:
         """Salva análise em arquivo JSON"""
         analysis = self.generate_all_analysis()
         
-        # Converter para formato serializável
-        analysis_serializable = {}
-        for key, value in analysis.items():
-            if isinstance(value, dict):
-                analysis_serializable[key] = {}
-                for k, v in value.items():
-                    if isinstance(v, (np.integer, np.floating)):
-                        analysis_serializable[key][k] = float(v)
-                    elif isinstance(v, dict):
-                        analysis_serializable[key][k] = {
-                            str(k2): (float(v2) if isinstance(v2, (np.integer, np.floating)) else v2)
-                            for k2, v2 in v.items()
-                        }
-                    else:
-                        analysis_serializable[key][k] = v
-        
         with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(analysis_serializable, f, indent=2, ensure_ascii=False)
+            json.dump(analysis, f, indent=2, ensure_ascii=False)
         
         print(f"✅ Análise salva em {output_path}")
     
