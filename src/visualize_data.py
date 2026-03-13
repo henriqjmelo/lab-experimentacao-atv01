@@ -24,9 +24,18 @@ class RepositoryVisualizer:
         self.df['createdAt'] = pd.to_datetime(self.df['createdAt'])
         self.df['updatedAt'] = pd.to_datetime(self.df['updatedAt'])
         
+        # Remover timezone para comparação (usar UTC)
+        if self.df['createdAt'].dt.tz is not None:
+            self.df['createdAt'] = self.df['createdAt'].dt.tz_localize(None)
+        if self.df['updatedAt'].dt.tz is not None:
+            self.df['updatedAt'] = self.df['updatedAt'].dt.tz_localize(None)
+        
+        # Usar pd.Timestamp.now() sem timezone
+        now = pd.Timestamp.now()
+        
         # Calcular idade do repositório
-        self.df['age_years'] = (datetime.now() - self.df['createdAt']).dt.days / 365.25
-        self.df['days_since_update'] = (datetime.now() - self.df['updatedAt']).dt.days
+        self.df['age_years'] = (now - self.df['createdAt']).dt.days / 365.25
+        self.df['days_since_update'] = (now - self.df['updatedAt']).dt.days
         
         # Calcular razão de issues fechadas
         self.df['closed_issues_ratio'] = np.where(
