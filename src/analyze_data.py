@@ -33,6 +33,14 @@ class RepositoryAnalyzer:
         # Calcular dias desde última atualização
         self.df['days_since_update'] = (now - self.df['updatedAt']).dt.days
         
+        # Calcular commits por ano (frequência de desenvolvimento)
+        self.df['defaultBranch_commit_history_totalCount'] = self.df['defaultBranch_commit_history_totalCount'].fillna(0)
+        self.df['commits_per_year'] = np.where(
+            self.df['age_years'] > 0,
+            self.df['defaultBranch_commit_history_totalCount'] / self.df['age_years'],
+            self.df['defaultBranch_commit_history_totalCount']
+        )
+        
         # Calcular razão de issues fechadas
         self.df['closed_issues_ratio'] = np.where(
             self.df['issues_totalCount'] > 0,
@@ -99,6 +107,14 @@ class RepositoryAnalyzer:
             'repos_updated_last_week': int((self.df['days_since_update'] <= 7).sum()),
             'repos_updated_last_month': int((self.df['days_since_update'] <= 30).sum()),
             'repos_updated_last_year': int((self.df['days_since_update'] <= 365).sum()),
+            'median_commits_per_year': float(self.df['commits_per_year'].median()),
+            'mean_commits_per_year': float(self.df['commits_per_year'].mean()),
+            'min_commits_per_year': float(self.df['commits_per_year'].min()),
+            'max_commits_per_year': float(self.df['commits_per_year'].max()),
+            'std_commits_per_year': float(self.df['commits_per_year'].std()),
+            'q1_commits_per_year': float(self.df['commits_per_year'].quantile(0.25)),
+            'q3_commits_per_year': float(self.df['commits_per_year'].quantile(0.75)),
+            'total_commits': float(self.df['defaultBranch_commit_history_totalCount'].sum()),
         }
         return stats
     
@@ -152,8 +168,11 @@ class RepositoryAnalyzer:
                 'mean_releases': float(lang_data['releases_totalCount'].mean()),
                 'median_days_since_update': float(lang_data['days_since_update'].median()),
                 'mean_days_since_update': float(lang_data['days_since_update'].mean()),
+                'median_commits_per_year': float(lang_data['commits_per_year'].median()),
+                'mean_commits_per_year': float(lang_data['commits_per_year'].mean()),
                 'total_prs': float(lang_data['pullRequests_totalCount'].sum()),
                 'total_releases': float(lang_data['releases_totalCount'].sum()),
+                'total_commits': float(lang_data['defaultBranch_commit_history_totalCount'].sum()),
             }
         
         # Ordenar por número de repositórios
@@ -214,6 +233,9 @@ class RepositoryAnalyzer:
         print("\n📊 RQ04: Sistemas populares são atualizados com frequência?")
         print(f"   Mediana de dias desde última atualização: {analysis['RQ04_updates']['median_days_since_update']:.0f} dias")
         print(f"   Média de dias desde última atualização: {analysis['RQ04_updates']['mean_days_since_update']:.0f} dias")
+        print(f"   Mediana de commits/ano: {analysis['RQ04_updates']['median_commits_per_year']:.2f}")
+        print(f"   Média de commits/ano: {analysis['RQ04_updates']['mean_commits_per_year']:.2f}")
+        print(f"   Total de commits: {analysis['RQ04_updates']['total_commits']:.0f}")
         print(f"   Atualizados na última semana: {analysis['RQ04_updates']['repos_updated_last_week']}")
         print(f"   Atualizados no último mês: {analysis['RQ04_updates']['repos_updated_last_month']}")
         
@@ -236,6 +258,7 @@ class RepositoryAnalyzer:
             print(f"      Repositórios: {data['count']}")
             print(f"      Mediana PRs: {data['median_prs']:.0f}")
             print(f"      Mediana releases: {data['median_releases']:.0f}")
+            print(f"      Mediana commits/ano: {data['median_commits_per_year']:.2f}")
             print(f"      Mediana dias desde update: {data['median_days_since_update']:.0f}")
         
         print("\n" + "="*80)
